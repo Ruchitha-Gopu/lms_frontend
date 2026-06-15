@@ -5,6 +5,7 @@ import "./Login.css";
 
 function Login() {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     email: "",
@@ -12,55 +13,37 @@ function Login() {
   });
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
 
     try {
-      const res = await API.post(
-        "/auth/login",
-        formData
-      );
+      const res = await API.post("/auth/login", formData);
 
-      localStorage.setItem(
-        "token",
-        res.data.token
-      );
+      localStorage.setItem("token", res.data.token);
+      localStorage.setItem("user", JSON.stringify(res.data.user));
 
-      localStorage.setItem(
-        "user",
-        JSON.stringify(res.data.user)
+      navigate(
+        res.data.user.role === "admin"
+          ? "/admin-dashboard"
+          : "/user-dashboard"
       );
-
-      if (res.data.user.role === "admin") {
-        navigate("/admin-dashboard");
-      } else {
-        navigate("/user-dashboard");
-      }
     } catch (error) {
-      alert(
-        error.response?.data?.message ||
-          "Invalid Credentials"
-      );
+      alert(error.response?.data?.message || "Login failed");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="login-container">
-
       <div className="login-card">
-
-        <h2 className="text-center mb-4">
-          LMS Login
-        </h2>
+        <h2 className="text-center mb-4">LMS Login</h2>
 
         <form onSubmit={handleSubmit}>
-
           <input
             type="email"
             name="email"
@@ -84,21 +67,16 @@ function Login() {
           <button
             type="submit"
             className="btn btn-primary w-100"
+            disabled={loading}
           >
-            Login
+            {loading ? "Please wait while processing Your request" : "Login"}
           </button>
-
         </form>
 
         <p className="text-center mt-3">
-          Don't have an account?
-          <Link to="/register">
-            {" "}Register
-          </Link>
+          Don't have an account? <Link to="/register">Register</Link>
         </p>
-
       </div>
-
     </div>
   );
 }
