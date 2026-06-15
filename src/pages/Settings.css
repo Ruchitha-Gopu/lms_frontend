@@ -1,0 +1,20 @@
+.settings-dark {
+  background: #0f172a;
+  color: white;
+  min-height: 100vh;
+}
+
+.settings-dark .card {
+  background: #1e293b;
+  color: white;
+}
+
+.settings-dark .form-control {
+  background: #334155;
+  color: white;
+  border-color: #475569;
+}
+
+.settings-dark .form-check-label {
+  color: white;
+}

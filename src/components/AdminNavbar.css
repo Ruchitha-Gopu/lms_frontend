@@ -1,0 +1,26 @@
+.admin-navbar {
+  background: #0f172a !important;
+}
+
+.admin-navbar .navbar-brand {
+  color: #38bdf8 !important;
+}
+
+.admin-navbar .nav-link {
+  color: white !important;
+  margin: 0 5px;
+  padding: 8px 15px !important;
+  border-radius: 8px;
+  transition: 0.3s;
+}
+
+.admin-navbar .nav-link:hover {
+  background: #334155 !important;
+  color: white !important;
+}
+
+.admin-navbar .admin-active {
+  background: #2563eb !important;
+  color: white !important;
+  font-weight: 700;
+}
