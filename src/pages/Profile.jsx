@@ -3,76 +3,78 @@ import API from "../api";
 import Sidebar from "../components/Sidebar";
 
 function Profile() {
-  const loggedUser =
-    JSON.parse(localStorage.getItem("user")) || {};
+  const loggedUser = JSON.parse(localStorage.getItem("user")) || {};
+  const userId = loggedUser.id || loggedUser._id;
 
-  const [isEditing, setIsEditing] =
-    useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const [profile, setProfile] =
-    useState(null);
+  const [profile, setProfile] = useState({
+    name: loggedUser.name || "",
+    email: loggedUser.email || "",
+    phone: "",
+    education: "",
+    role: loggedUser.role || "Student",
+    skills: [],
+  });
 
-  const [formData, setFormData] =
-    useState({
-      name: "",
-      email: "",
-      phone: "",
-      education: "",
-      role: "Student",
-      skills: "",
-    });
+  const [formData, setFormData] = useState({
+    name: loggedUser.name || "",
+    email: loggedUser.email || "",
+    phone: "",
+    education: "",
+    role: loggedUser.role || "Student",
+    skills: "",
+  });
 
   useEffect(() => {
-    fetchProfile();
-  }, []);
+    if (userId) {
+      fetchProfile();
+    }
+  }, [userId]);
 
   const fetchProfile = async () => {
     try {
-      const res = await API.get(
-        `/profile/user/${loggedUser.id}`
-      );
+      setLoading(true);
 
-      setProfile(res.data);
+      const res = await API.get(`/profile/user/${userId}`);
+      const data = res.data || {};
+
+      setProfile({
+        name: data.name || loggedUser.name || "",
+        email: data.email || loggedUser.email || "",
+        phone: data.phone || "",
+        education: data.education || "",
+        role: data.role || loggedUser.role || "Student",
+        skills: Array.isArray(data.skills) ? data.skills : [],
+      });
 
       setFormData({
-        name:
-          res.data.name ||
-          loggedUser.name ||
-          "",
-        email:
-          res.data.email ||
-          loggedUser.email ||
-          "",
-        phone: res.data.phone || "",
-        education:
-          res.data.education || "",
-        role:
-          res.data.role ||
-          loggedUser.role ||
-          "Student",
-        skills: Array.isArray(
-          res.data.skills
-        )
-          ? res.data.skills.join(", ")
-          : "",
+        name: data.name || loggedUser.name || "",
+        email: data.email || loggedUser.email || "",
+        phone: data.phone || "",
+        education: data.education || "",
+        role: data.role || loggedUser.role || "Student",
+        skills: Array.isArray(data.skills) ? data.skills.join(", ") : "",
       });
     } catch (error) {
-      console.log(error);
+      console.log("Profile API Error:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleChange = (e) => {
     setFormData({
       ...formData,
-      [e.target.name]:
-        e.target.value,
+      [e.target.name]: e.target.value,
     });
   };
 
   const saveProfile = async () => {
     try {
       const updatedData = {
-        userId: loggedUser.id,
+        userId,
         name: formData.name,
         email: formData.email,
         phone: formData.phone,
@@ -84,33 +86,36 @@ function Profile() {
           .filter((item) => item),
       };
 
-      const res = await API.put(
-        `/profile/user/${loggedUser.id}`,
-        updatedData
-      );
+      const res = await API.put(`/profile/user/${userId}`, updatedData);
 
       setProfile(res.data);
       setIsEditing(false);
 
       alert("Profile Updated Successfully");
     } catch (error) {
-      console.log(error);
+      console.log("Profile Update Error:", error);
       alert("Profile Update Failed");
     }
   };
-
-  if (!profile) {
-    return <h3>Loading...</h3>;
-  }
 
   return (
     <div className="d-flex flex-column flex-md-row">
       <Sidebar />
 
-      <div className="container-fluid p-3 p-md-4">
-        <h2 className="mb-4">
-          👤 My Profile
-        </h2>
+      <div className="container-fluid p-3 p-md-4 bg-light min-vh-100">
+        <h2 className="mb-4">👤 My Profile</h2>
+
+        {loading && (
+          <div className="alert alert-info shadow-sm border-0">
+            Loading profile data...
+          </div>
+        )}
+
+        {!userId && (
+          <div className="alert alert-danger shadow-sm border-0">
+            User ID not found. Please login again.
+          </div>
+        )}
 
         <div className="row justify-content-center">
           <div className="col-12 col-md-8 col-lg-6">
@@ -125,12 +130,11 @@ function Profile() {
                     />
 
                     <h3 className="mt-3">
-                      {profile.name ||
-                        loggedUser.name}
+                      {profile.name || loggedUser.name || "Student"}
                     </h3>
 
                     <span className="badge bg-primary">
-                      {profile.role}
+                      {profile.role || "Student"}
                     </span>
                   </div>
 
@@ -138,8 +142,7 @@ function Profile() {
 
                   <p>
                     <strong>Email:</strong>{" "}
-                    {profile.email ||
-                      loggedUser.email}
+                    {profile.email || loggedUser.email || "Not added"}
                   </p>
 
                   <p>
@@ -149,8 +152,7 @@ function Profile() {
 
                   <p>
                     <strong>Education:</strong>{" "}
-                    {profile.education ||
-                      "Not added"}
+                    {profile.education || "Not added"}
                   </p>
 
                   <p>
@@ -162,18 +164,14 @@ function Profile() {
 
                   <button
                     className="btn btn-success w-100"
-                    onClick={() =>
-                      setIsEditing(true)
-                    }
+                    onClick={() => setIsEditing(true)}
                   >
                     Edit Profile
                   </button>
                 </>
               ) : (
                 <>
-                  <h4 className="mb-3">
-                    Edit Profile
-                  </h4>
+                  <h4 className="mb-3">Edit Profile</h4>
 
                   <input
                     type="text"
@@ -233,15 +231,14 @@ function Profile() {
                     <button
                       className="btn btn-primary w-50"
                       onClick={saveProfile}
+                      disabled={!userId}
                     >
                       Save
                     </button>
 
                     <button
                       className="btn btn-secondary w-50"
-                      onClick={() =>
-                        setIsEditing(false)
-                      }
+                      onClick={() => setIsEditing(false)}
                     >
                       Cancel
                     </button>

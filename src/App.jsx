@@ -21,6 +21,7 @@ import ManageCourses from "./pages/ManageCourses";
 import ManageAssignments from "./pages/ManageAssignments";
 import ManageQuiz from "./pages/ManageQuiz";
 
+
 function App() {
   return (
     <Routes>
@@ -122,7 +123,7 @@ function App() {
   element={<ManageQuiz />}
 />
 
-
+<Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }
