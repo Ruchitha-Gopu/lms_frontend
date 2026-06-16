@@ -4,24 +4,25 @@ import Sidebar from "../components/Sidebar";
 
 function Assignments() {
   const [assignments, setAssignments] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
-  const user = JSON.parse(localStorage.getItem("user"));
+  const user = JSON.parse(localStorage.getItem("user")) || {};
+  const userId = user.id || user._id;
 
   useEffect(() => {
-    fetchAssignments();
-  }, []);
+    if (userId) {
+      fetchAssignments();
+    }
+  }, [userId]);
 
   const fetchAssignments = async () => {
     try {
-      const res = await API.get(
-        `/assignments/user/${user.id}`
-      );
+      setLoading(true);
 
-      setAssignments(res.data);
+      const res = await API.get(`/assignments/user/${userId}`);
+      setAssignments(res.data || []);
     } catch (error) {
-      console.log(error);
-      alert("Failed to fetch assignments");
+      console.log("Assignments API Error:", error);
     } finally {
       setLoading(false);
     }
@@ -29,30 +30,35 @@ function Assignments() {
 
   const submitAssignment = async (id) => {
     try {
-      await API.put(
-        `/assignments/${id}`,
-        {
-          status: "Submitted",
-        }
-      );
+      await API.put(`/assignments/${id}`, {
+        status: "Submitted",
+      });
 
       fetchAssignments();
     } catch (error) {
-      console.log(error);
+      console.log("Submit Assignment Error:", error);
       alert("Failed to submit assignment");
     }
   };
-
-  if (loading) {
-    return <h3 className="text-center mt-5">Loading...</h3>;
-  }
 
   return (
     <div className="d-flex flex-column flex-md-row">
       <Sidebar />
 
-      <div className="container-fluid p-3 p-md-4">
+      <div className="container-fluid p-3 p-md-4 bg-light min-vh-100">
         <h2 className="mb-4">📝 My Assignments</h2>
+
+        {loading && (
+          <div className="alert alert-info shadow-sm border-0">
+            Loading assignments...
+          </div>
+        )}
+
+        {!userId && (
+          <div className="alert alert-danger shadow-sm border-0">
+            User ID not found. Please login again.
+          </div>
+        )}
 
         <div className="row g-3 g-md-4">
           {assignments.length > 0 ? (
@@ -76,7 +82,10 @@ function Assignments() {
                     </p>
 
                     <p>
-                      <strong>Due:</strong> {item.dueDate}
+                      <strong>Due:</strong>{" "}
+                      {item.dueDate
+                        ? new Date(item.dueDate).toLocaleDateString()
+                        : "No due date"}
                     </p>
 
                     <p>
@@ -88,7 +97,7 @@ function Assignments() {
                             : "bg-warning text-dark"
                         }`}
                       >
-                        {item.status}
+                        {item.status || "Pending"}
                       </span>
                     </p>
 
@@ -99,9 +108,7 @@ function Assignments() {
                           : "btn-primary"
                       }`}
                       disabled={item.status === "Submitted"}
-                      onClick={() =>
-                        submitAssignment(item._id)
-                      }
+                      onClick={() => submitAssignment(item._id)}
                     >
                       {item.status === "Submitted"
                         ? "Submitted ✓"
@@ -112,9 +119,12 @@ function Assignments() {
               </div>
             ))
           ) : (
-            <div className="alert alert-warning">
-              No assignments found for {user?.name}
-            </div>
+            !loading &&
+            userId && (
+              <div className="alert alert-warning shadow-sm border-0">
+                No assignments found for {user.name || "this user"}.
+              </div>
+            )
           )}
         </div>
       </div>
