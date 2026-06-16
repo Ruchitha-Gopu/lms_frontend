@@ -4,6 +4,7 @@ import Sidebar from "../components/Sidebar";
 
 function UserDashboard() {
   const user = JSON.parse(localStorage.getItem("user")) || {};
+  const userId = user.id || user._id;
 
   const [dashboard, setDashboard] = useState({
     totalAssignments: 0,
@@ -16,19 +17,19 @@ function UserDashboard() {
     progressPercentage: 0,
   });
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (user?.id) {
+    if (userId) {
       fetchDashboard();
-    } else {
-      setLoading(false);
     }
-  }, []);
+  }, [userId]);
 
   const fetchDashboard = async () => {
     try {
-      const res = await API.get(`/dashboard/user/${user.id}`);
+      setLoading(true);
+
+      const res = await API.get(`/dashboard/user/${userId}`);
 
       setDashboard({
         totalAssignments: res.data?.totalAssignments || 0,
@@ -41,36 +42,41 @@ function UserDashboard() {
         progressPercentage: res.data?.progressPercentage || 0,
       });
     } catch (error) {
-      console.log(error);
+      console.log("Dashboard API Error:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  if (loading) {
-    return <h3 className="text-center mt-5">Loading...</h3>;
-  }
-
   return (
-    <div className="d-flex flex-column flex-md-row min-vh-100 bg-light">
+    <div className="d-flex flex-column flex-md-row">
       <Sidebar />
 
-      <main className="container-fluid p-3 p-md-4">
-        <div className="dashboard-hero mb-4">
-          <div>
-            <h2 className="fw-bold mb-1">
-              🎓 Welcome, {user.name || "Student"}
-            </h2>
-            <p className="mb-0">
-              Track your assignments, certificates, quizzes and learning
-              progress.
-            </p>
-          </div>
+      <div className="container-fluid p-3 p-md-4 bg-light min-vh-100">
+        <h2 className="mb-4">🎓 User Dashboard</h2>
 
-          <div className="hero-badge">
-            {dashboard.progressPercentage}% Completed
+        <div className="card shadow border-0 p-4 mb-4">
+          <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div>
+              <h3 className="fw-bold mb-1">
+                Welcome, {user.name || "Student"}
+              </h3>
+              <p className="text-muted mb-0">
+                Track your assignments, certificates, quizzes and learning progress.
+              </p>
+            </div>
+
+            <span className="badge bg-primary fs-6 p-3">
+              {dashboard.progressPercentage}% Completed
+            </span>
           </div>
         </div>
+
+        {loading && (
+          <div className="alert alert-info shadow-sm border-0">
+            Loading dashboard data...
+          </div>
+        )}
 
         <div className="row g-3">
           <DashboardCard
@@ -89,7 +95,7 @@ function UserDashboard() {
 
           <DashboardCard
             icon="✅"
-            title="Submitted"
+            title="Submitted Assignments"
             value={dashboard.submittedAssignments}
             color="success"
           />
@@ -125,7 +131,7 @@ function UserDashboard() {
           />
         </div>
 
-        <div className="card shadow-sm border-0 p-4 mt-4 progress-card">
+        <div className="card shadow border-0 p-4 mt-4">
           <div className="d-flex justify-content-between align-items-center mb-3">
             <h4 className="fw-bold mb-0">📈 Learning Progress</h4>
             <span className="badge bg-primary">
@@ -136,79 +142,22 @@ function UserDashboard() {
           <div className="progress" style={{ height: "28px" }}>
             <div
               className="progress-bar progress-bar-striped progress-bar-animated"
-              style={{
-                width: `${dashboard.progressPercentage}%`,
-              }}
+              style={{ width: `${dashboard.progressPercentage}%` }}
             >
               {dashboard.progressPercentage}%
             </div>
           </div>
         </div>
 
-        {dashboard.totalAssignments === 0 &&
+        {!loading &&
+          dashboard.totalAssignments === 0 &&
           dashboard.totalCertificates === 0 &&
           dashboard.progressPercentage === 0 && (
             <div className="alert alert-warning mt-4 shadow-sm border-0">
-              No learning data found for {user.name || "this user"}. Admin needs
-              to assign assignments, progress, and certificates for this user.
+              No learning data found for {user.name || "this user"}.
             </div>
           )}
-      </main>
-
-      <style>
-        {`
-          .dashboard-hero {
-            background: linear-gradient(135deg, #0d6efd, #6610f2);
-            color: white;
-            border-radius: 22px;
-            padding: 28px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 16px;
-            box-shadow: 0 14px 30px rgba(13, 110, 253, 0.25);
-          }
-
-          .hero-badge {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 12px 18px;
-            border-radius: 30px;
-            font-weight: 700;
-            white-space: nowrap;
-          }
-
-          .dashboard-card {
-            border-radius: 18px;
-            transition: all 0.3s ease;
-          }
-
-          .dashboard-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12) !important;
-          }
-
-          .dashboard-icon {
-            width: 52px;
-            height: 52px;
-            border-radius: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 26px;
-          }
-
-          .progress-card {
-            border-radius: 18px;
-          }
-
-          @media (max-width: 768px) {
-            .dashboard-hero {
-              flex-direction: column;
-              align-items: flex-start;
-            }
-          }
-        `}
-      </style>
+      </div>
     </div>
   );
 }
@@ -216,9 +165,16 @@ function UserDashboard() {
 function DashboardCard({ icon, title, value, color }) {
   return (
     <div className="col-12 col-sm-6 col-lg-3">
-      <div className="card dashboard-card shadow-sm border-0 p-4 h-100">
+      <div className="card shadow border-0 p-4 h-100 dashboard-card">
         <div className="d-flex align-items-center gap-3">
-          <div className={`dashboard-icon bg-${color} bg-opacity-10`}>
+          <div
+            className={`bg-${color} bg-opacity-10 rounded-4 d-flex align-items-center justify-content-center`}
+            style={{
+              width: "55px",
+              height: "55px",
+              fontSize: "26px",
+            }}
+          >
             {icon}
           </div>
 
