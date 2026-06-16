@@ -1,6 +1,6 @@
 .settings-page {
-  background: #f8f9fa;
   min-height: 100vh;
+  background: #f8f9fa;
 }
 
 .settings-card {
@@ -11,10 +11,9 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 12px;
+  background: #f8f9fa;
   padding: 18px;
   border-radius: 14px;
-  background: #f8f9fa;
   margin-bottom: 15px;
 }
 
@@ -23,8 +22,8 @@
   color: #e5e7eb !important;
 }
 
-.app-dark-mode .settings-page,
 .app-dark-mode .container-fluid,
+.app-dark-mode .settings-page,
 .app-dark-mode .bg-light {
   background: #0f172a !important;
   color: #e5e7eb !important;
@@ -42,26 +41,10 @@
 
 .app-dark-mode .form-control {
   background: #0f172a !important;
-  color: #ffffff !important;
+  color: white !important;
   border-color: #475569 !important;
-}
-
-.app-dark-mode .form-control::placeholder {
-  color: #94a3b8 !important;
 }
 
 .app-dark-mode .text-muted {
   color: #cbd5e1 !important;
-}
-
-.app-dark-mode .alert-warning {
-  background: #78350f !important;
-  color: #fde68a !important;
-  border: none;
-}
-
-.app-dark-mode .alert-info {
-  background: #164e63 !important;
-  color: #cffafe !important;
-  border: none;
 }

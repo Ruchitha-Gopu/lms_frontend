@@ -7,7 +7,7 @@ function Settings() {
   const user = JSON.parse(localStorage.getItem("user")) || {};
   const userId = user.id || user._id;
 
-  const [loading, setLoading] = useState(false);
+  const savedDarkMode = localStorage.getItem("darkMode") === "true";
 
   const [formData, setFormData] = useState({
     name: user.name || "",
@@ -15,30 +15,34 @@ function Settings() {
     password: "",
     phone: "",
     education: "",
-    darkMode: false,
+    darkMode: savedDarkMode,
     notifications: true,
   });
 
   useEffect(() => {
+    applyDarkMode(savedDarkMode);
+
     if (userId) {
       fetchSettings();
     }
   }, [userId]);
 
-  useEffect(() => {
-    if (formData.darkMode) {
+  const applyDarkMode = (value) => {
+    localStorage.setItem("darkMode", value);
+
+    if (value) {
       document.body.classList.add("app-dark-mode");
     } else {
       document.body.classList.remove("app-dark-mode");
     }
-  }, [formData.darkMode]);
+  };
 
   const fetchSettings = async () => {
     try {
-      setLoading(true);
-
       const res = await API.get(`/settings/user/${userId}`);
       const data = res.data || {};
+
+      const dbDarkMode = data.darkMode ?? savedDarkMode;
 
       setFormData({
         name: data.name || user.name || "",
@@ -46,23 +50,29 @@ function Settings() {
         password: "",
         phone: data.phone || "",
         education: data.education || "",
-        darkMode: data.darkMode || false,
+        darkMode: dbDarkMode,
         notifications: data.notifications ?? true,
       });
+
+      applyDarkMode(dbDarkMode);
     } catch (error) {
       console.log("Settings API Error:", error);
-    } finally {
-      setLoading(false);
     }
   };
 
   const handleChange = (e) => {
     const { name, value, checked, type } = e.target;
 
-    setFormData({
-      ...formData,
-      [name]: type === "checkbox" ? checked : value,
-    });
+    const newValue = type === "checkbox" ? checked : value;
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: newValue,
+    }));
+
+    if (name === "darkMode") {
+      applyDarkMode(newValue);
+    }
   };
 
   const saveSettings = async () => {
@@ -72,6 +82,7 @@ function Settings() {
         ...formData,
       });
 
+      applyDarkMode(formData.darkMode);
       alert("Settings Updated Successfully");
     } catch (error) {
       console.log("Settings Update Error:", error);
@@ -86,130 +97,93 @@ function Settings() {
       <div className="container-fluid p-3 p-md-4 min-vh-100">
         <h2 className="mb-4">⚙️ Account Settings</h2>
 
-        {loading && (
-          <div className="alert alert-info shadow-sm border-0">
-            Loading settings...
-          </div>
-        )}
-
-        {!userId && (
-          <div className="alert alert-danger shadow-sm border-0">
-            User ID not found. Please login again.
-          </div>
-        )}
-
         <div className="row justify-content-center">
           <div className="col-12 col-lg-8">
             <div className="settings-card card shadow border-0 p-4">
               <h4 className="fw-bold mb-3">Personal Information</h4>
 
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Full Name</label>
-                  <input
-                    type="text"
-                    name="name"
-                    className="form-control"
-                    value={formData.name}
-                    onChange={handleChange}
-                  />
-                </div>
+              <input
+                type="text"
+                name="name"
+                className="form-control mb-3"
+                placeholder="Full Name"
+                value={formData.name}
+                onChange={handleChange}
+              />
 
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Email Address</label>
-                  <input
-                    type="email"
-                    name="email"
-                    className="form-control"
-                    value={formData.email}
-                    onChange={handleChange}
-                  />
-                </div>
+              <input
+                type="email"
+                name="email"
+                className="form-control mb-3"
+                placeholder="Email"
+                value={formData.email}
+                onChange={handleChange}
+              />
 
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Phone Number</label>
-                  <input
-                    type="text"
-                    name="phone"
-                    className="form-control"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    placeholder="Enter phone number"
-                  />
-                </div>
+              <input
+                type="text"
+                name="phone"
+                className="form-control mb-3"
+                placeholder="Phone"
+                value={formData.phone}
+                onChange={handleChange}
+              />
 
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Education</label>
-                  <input
-                    type="text"
-                    name="education"
-                    className="form-control"
-                    value={formData.education}
-                    onChange={handleChange}
-                    placeholder="BTech, Degree..."
-                  />
-                </div>
+              <input
+                type="text"
+                name="education"
+                className="form-control mb-3"
+                placeholder="Education"
+                value={formData.education}
+                onChange={handleChange}
+              />
 
-                <div className="col-12 mb-3">
-                  <label className="form-label">New Password</label>
-                  <input
-                    type="password"
-                    name="password"
-                    className="form-control"
-                    value={formData.password}
-                    onChange={handleChange}
-                    placeholder="Leave empty if you do not want to change"
-                  />
-                </div>
-              </div>
+              <input
+                type="password"
+                name="password"
+                className="form-control mb-3"
+                placeholder="New Password"
+                value={formData.password}
+                onChange={handleChange}
+              />
 
               <hr />
 
-              <h4 className="fw-bold mb-3">Preferences</h4>
-
               <div className="settings-option">
                 <div>
-                  <h6 className="mb-1">Dark Mode</h6>
+                  <h6>Dark Mode</h6>
                   <p className="text-muted mb-0">
-                    Enable dark theme for full website
+                    Change full website theme
                   </p>
                 </div>
 
-                <div className="form-check form-switch">
-                  <input
-                    type="checkbox"
-                    className="form-check-input"
-                    name="darkMode"
-                    checked={formData.darkMode}
-                    onChange={handleChange}
-                  />
-                </div>
+                <input
+                  type="checkbox"
+                  className="form-check-input"
+                  name="darkMode"
+                  checked={formData.darkMode}
+                  onChange={handleChange}
+                />
               </div>
 
               <div className="settings-option">
                 <div>
-                  <h6 className="mb-1">Notifications</h6>
+                  <h6>Notifications</h6>
                   <p className="text-muted mb-0">
-                    Receive course and assignment updates
+                    Enable course updates
                   </p>
                 </div>
 
-                <div className="form-check form-switch">
-                  <input
-                    type="checkbox"
-                    className="form-check-input"
-                    name="notifications"
-                    checked={formData.notifications}
-                    onChange={handleChange}
-                  />
-                </div>
+                <input
+                  type="checkbox"
+                  className="form-check-input"
+                  name="notifications"
+                  checked={formData.notifications}
+                  onChange={handleChange}
+                />
               </div>
 
-              <button
-                className="btn btn-primary w-100 mt-4"
-                onClick={saveSettings}
-                disabled={!userId}
-              >
+              <button className="btn btn-primary w-100 mt-4" onClick={saveSettings}>
                 Save Settings
               </button>
             </div>
