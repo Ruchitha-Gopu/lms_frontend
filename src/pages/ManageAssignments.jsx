@@ -4,10 +4,8 @@ import AdminNavbar from "../components/AdminNavbar";
 
 function ManageAssignments() {
   const [assignments, setAssignments] = useState([]);
-  const [users, setUsers] = useState([]);
 
   const [formData, setFormData] = useState({
-    userId: "",
     course: "",
     title: "",
     description: "",
@@ -18,24 +16,14 @@ function ManageAssignments() {
 
   useEffect(() => {
     fetchAssignments();
-    fetchUsers();
   }, []);
 
   const fetchAssignments = async () => {
     try {
       const res = await API.get("/assignments");
-      setAssignments(res.data || []);
+      setAssignments(res.data);
     } catch (error) {
-      console.log("Assignments Error:", error);
-    }
-  };
-
-  const fetchUsers = async () => {
-    try {
-      const res = await API.get("/auth/users");
-      setUsers(res.data || []);
-    } catch (error) {
-      console.log("Users Error:", error);
+      console.log(error);
     }
   };
 
@@ -49,7 +37,6 @@ function ManageAssignments() {
 
   const addAssignment = async () => {
     if (
-      !formData.userId ||
       !formData.course ||
       !formData.title ||
       !formData.description ||
@@ -65,7 +52,6 @@ function ManageAssignments() {
       alert("Assignment Added Successfully");
 
       setFormData({
-        userId: "",
         course: "",
         title: "",
         description: "",
@@ -76,7 +62,7 @@ function ManageAssignments() {
 
       fetchAssignments();
     } catch (error) {
-      console.log("Add Assignment Error:", error);
+      console.log(error);
       alert("Failed to add assignment");
     }
   };
@@ -86,7 +72,7 @@ function ManageAssignments() {
       await API.delete(`/assignments/${id}`);
       fetchAssignments();
     } catch (error) {
-      console.log("Delete Error:", error);
+      console.log(error);
     }
   };
 
@@ -94,54 +80,31 @@ function ManageAssignments() {
     <>
       <AdminNavbar />
 
-      <div className="container-fluid p-4 bg-light min-vh-100">
+      <div className="container-fluid p-4">
         <h2 className="mb-4">📝 Manage Assignments</h2>
 
         <div className="row mb-4">
-          <div className="col-md-4 mb-3">
-            <div className="card shadow border-0 p-4 text-center">
+          <div className="col-md-6 mb-3">
+            <div className="card shadow p-4 text-center">
               <h5>Total Assignments</h5>
               <h2>{assignments.length}</h2>
             </div>
           </div>
 
-          <div className="col-md-4 mb-3">
-            <div className="card shadow border-0 p-4 text-center">
-              <h5>Pending</h5>
+          <div className="col-md-6 mb-3">
+            <div className="card shadow p-4 text-center">
+              <h5>Pending Assignments</h5>
               <h2>
                 {assignments.filter((item) => item.status === "Pending").length}
               </h2>
             </div>
           </div>
-
-          <div className="col-md-4 mb-3">
-            <div className="card shadow border-0 p-4 text-center">
-              <h5>Registered Users</h5>
-              <h2>{users.length}</h2>
-            </div>
-          </div>
         </div>
 
-        <div className="card shadow border-0 p-4 mb-4">
+        <div className="card shadow p-4 mb-4">
           <h4 className="mb-3">Add New Assignment</h4>
 
           <div className="row">
-            <div className="col-md-6 mb-3">
-              <select
-                name="userId"
-                className="form-control"
-                value={formData.userId}
-                onChange={handleChange}
-              >
-                <option value="">Select User</option>
-                {users.map((user) => (
-                  <option key={user._id} value={user._id}>
-                    {user.name} - {user.email}
-                  </option>
-                ))}
-              </select>
-            </div>
-
             <div className="col-md-6 mb-3">
               <input
                 type="text"
@@ -164,7 +127,17 @@ function ManageAssignments() {
               />
             </div>
 
-            <div className="col-md-6 mb-3">
+            <div className="col-md-12 mb-3">
+              <textarea
+                name="description"
+                className="form-control"
+                placeholder="Assignment Description"
+                value={formData.description}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div className="col-md-4 mb-3">
               <input
                 type="date"
                 name="dueDate"
@@ -174,7 +147,7 @@ function ManageAssignments() {
               />
             </div>
 
-            <div className="col-md-6 mb-3">
+            <div className="col-md-4 mb-3">
               <input
                 type="number"
                 name="marks"
@@ -185,7 +158,7 @@ function ManageAssignments() {
               />
             </div>
 
-            <div className="col-md-6 mb-3">
+            <div className="col-md-4 mb-3">
               <select
                 name="status"
                 className="form-control"
@@ -196,16 +169,6 @@ function ManageAssignments() {
                 <option value="Submitted">Submitted</option>
               </select>
             </div>
-
-            <div className="col-12 mb-3">
-              <textarea
-                name="description"
-                className="form-control"
-                placeholder="Assignment Description"
-                value={formData.description}
-                onChange={handleChange}
-              />
-            </div>
           </div>
 
           <button className="btn btn-primary w-100" onClick={addAssignment}>
@@ -213,16 +176,16 @@ function ManageAssignments() {
           </button>
         </div>
 
-        <div className="card shadow border-0 p-4">
+        <div className="card shadow p-4">
           <h4 className="mb-3">Assignment List</h4>
 
           <div className="table-responsive">
             <table className="table table-bordered table-hover">
               <thead className="table-dark">
                 <tr>
-                  <th>User</th>
                   <th>Course</th>
                   <th>Title</th>
+                  <th>Description</th>
                   <th>Due Date</th>
                   <th>Marks</th>
                   <th>Status</th>
@@ -234,17 +197,10 @@ function ManageAssignments() {
                 {assignments.length > 0 ? (
                   assignments.map((item) => (
                     <tr key={item._id}>
-                      <td>
-                        {item.userId?.name || "User"} <br />
-                        <small>{item.userId?.email}</small>
-                      </td>
                       <td>{item.course}</td>
                       <td>{item.title}</td>
-                      <td>
-                        {item.dueDate
-                          ? new Date(item.dueDate).toLocaleDateString()
-                          : ""}
-                      </td>
+                      <td>{item.description}</td>
+                      <td>{item.dueDate}</td>
                       <td>{item.marks}</td>
                       <td>
                         <span
