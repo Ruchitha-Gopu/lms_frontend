@@ -4,9 +4,7 @@ import Sidebar from "../components/Sidebar";
 import "./Settings.css";
 
 function Settings() {
-  const user =
-    JSON.parse(localStorage.getItem("user")) || {};
-
+  const user = JSON.parse(localStorage.getItem("user")) || {};
   const userId = user.id || user._id;
 
   const [formData, setFormData] = useState({
@@ -37,11 +35,9 @@ function Settings() {
 
   const fetchSettings = async () => {
     try {
-      const res = await API.get(
-        `/settings/user/${userId}`
-      );
+      const res = await API.get(`/settings/user/${userId}`);
 
-      const data = res.data;
+      const data = res.data || {};
 
       setFormData({
         name: data.name || user.name || "",
@@ -49,28 +45,28 @@ function Settings() {
         password: data.password || "",
         phone: data.phone || "",
         education: data.education || "",
-        darkMode: data.darkMode || false,
-        notifications:
-          data.notifications ?? true,
+        darkMode: data.darkMode ?? false,
+        notifications: data.notifications ?? true,
       });
 
-      applyDarkMode(data.darkMode || false);
+      applyDarkMode(data.darkMode ?? false);
     } catch (error) {
-      console.log(error);
+      console.log(
+        "Fetch Settings Error:",
+        error.response?.data || error.message
+      );
     }
   };
 
   const handleChange = (e) => {
-    const { name, value, checked, type } =
-      e.target;
+    const { name, value, checked, type } = e.target;
 
-    const newValue =
-      type === "checkbox" ? checked : value;
+    const newValue = type === "checkbox" ? checked : value;
 
-    setFormData({
-      ...formData,
+    setFormData((prev) => ({
+      ...prev,
       [name]: newValue,
-    });
+    }));
 
     if (name === "darkMode") {
       applyDarkMode(newValue);
@@ -85,19 +81,20 @@ function Settings() {
       }
 
       await API.put(`/settings/user/${userId}`, {
-        userId,
         ...formData,
+        userId,
       });
 
       alert("Settings Updated Successfully");
     } catch (error) {
       console.log(
-        "Settings Error:",
+        "Settings Update Error:",
         error.response?.data || error.message
       );
 
       alert(
-        error.response?.data?.message ||
+        error.response?.data?.error ||
+          error.response?.data?.message ||
           "Settings Update Failed"
       );
     }
@@ -113,9 +110,7 @@ function Settings() {
         <div className="row justify-content-center">
           <div className="col-12 col-lg-8">
             <div className="settings-card card shadow border-0 p-4">
-              <h4 className="fw-bold mb-3">
-                Personal Information
-              </h4>
+              <h4 className="fw-bold mb-3">Personal Information</h4>
 
               <input
                 type="text"
