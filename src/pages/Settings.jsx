@@ -4,10 +4,10 @@ import Sidebar from "../components/Sidebar";
 import "./Settings.css";
 
 function Settings() {
-  const user = JSON.parse(localStorage.getItem("user")) || {};
-  const userId = user.id || user._id;
+  const user =
+    JSON.parse(localStorage.getItem("user")) || {};
 
-  const savedDarkMode = localStorage.getItem("darkMode") === "true";
+  const userId = user.id || user._id;
 
   const [formData, setFormData] = useState({
     name: user.name || "",
@@ -15,13 +15,11 @@ function Settings() {
     password: "",
     phone: "",
     education: "",
-    darkMode: savedDarkMode,
+    darkMode: false,
     notifications: true,
   });
 
   useEffect(() => {
-    applyDarkMode(savedDarkMode);
-
     if (userId) {
       fetchSettings();
     }
@@ -39,36 +37,40 @@ function Settings() {
 
   const fetchSettings = async () => {
     try {
-      const res = await API.get(`/settings/user/${userId}`);
-      const data = res.data || {};
+      const res = await API.get(
+        `/settings/user/${userId}`
+      );
 
-      const dbDarkMode = data.darkMode ?? savedDarkMode;
+      const data = res.data;
 
       setFormData({
         name: data.name || user.name || "",
         email: data.email || user.email || "",
-        password: "",
+        password: data.password || "",
         phone: data.phone || "",
         education: data.education || "",
-        darkMode: dbDarkMode,
-        notifications: data.notifications ?? true,
+        darkMode: data.darkMode || false,
+        notifications:
+          data.notifications ?? true,
       });
 
-      applyDarkMode(dbDarkMode);
+      applyDarkMode(data.darkMode || false);
     } catch (error) {
-      console.log("Settings API Error:", error);
+      console.log(error);
     }
   };
 
   const handleChange = (e) => {
-    const { name, value, checked, type } = e.target;
+    const { name, value, checked, type } =
+      e.target;
 
-    const newValue = type === "checkbox" ? checked : value;
+    const newValue =
+      type === "checkbox" ? checked : value;
 
-    setFormData((prev) => ({
-      ...prev,
+    setFormData({
+      ...formData,
       [name]: newValue,
-    }));
+    });
 
     if (name === "darkMode") {
       applyDarkMode(newValue);
@@ -77,16 +79,27 @@ function Settings() {
 
   const saveSettings = async () => {
     try {
+      if (!userId) {
+        alert("User not found. Please login again.");
+        return;
+      }
+
       await API.put(`/settings/user/${userId}`, {
         userId,
         ...formData,
       });
 
-      applyDarkMode(formData.darkMode);
       alert("Settings Updated Successfully");
     } catch (error) {
-      console.log("Settings Update Error:", error);
-      alert("Settings Update Failed");
+      console.log(
+        "Settings Error:",
+        error.response?.data || error.message
+      );
+
+      alert(
+        error.response?.data?.message ||
+          "Settings Update Failed"
+      );
     }
   };
 
@@ -100,7 +113,9 @@ function Settings() {
         <div className="row justify-content-center">
           <div className="col-12 col-lg-8">
             <div className="settings-card card shadow border-0 p-4">
-              <h4 className="fw-bold mb-3">Personal Information</h4>
+              <h4 className="fw-bold mb-3">
+                Personal Information
+              </h4>
 
               <input
                 type="text"
@@ -183,7 +198,10 @@ function Settings() {
                 />
               </div>
 
-              <button className="btn btn-primary w-100 mt-4" onClick={saveSettings}>
+              <button
+                className="btn btn-primary w-100 mt-4"
+                onClick={saveSettings}
+              >
                 Save Settings
               </button>
             </div>
