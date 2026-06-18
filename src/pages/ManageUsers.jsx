@@ -3,23 +3,23 @@ import API from "../api";
 import AdminNavbar from "../components/AdminNavbar";
 
 function ManageUsers() {
-  const [students, setStudents] = useState([]);
+  const [users, setUsers] = useState([]);
 
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    course: "",
-    status: "Active",
+    password: "",
+    role: "user",
   });
 
   useEffect(() => {
-    fetchStudents();
+    fetchUsers();
   }, []);
 
-  const fetchStudents = async () => {
+  const fetchUsers = async () => {
     try {
-      const res = await API.get("/students");
-      setStudents(res.data);
+      const res = await API.get("/users");
+      setUsers(res.data);
     } catch (error) {
       console.log(error);
       alert("Failed to fetch users");
@@ -33,39 +33,38 @@ function ManageUsers() {
     });
   };
 
-  const addStudent = async () => {
-    if (
-      !formData.name.trim() ||
-      !formData.email.trim() ||
-      !formData.course.trim()
-    ) {
-      alert("Please fill all fields");
+  const addUser = async () => {
+    if (!formData.name.trim() || !formData.email.trim()) {
+      alert("Please fill name and email");
       return;
     }
 
     try {
-      await API.post("/students", formData);
+      await API.post("/users", formData);
 
       alert("User Added Successfully");
 
       setFormData({
         name: "",
         email: "",
-        course: "",
-        status: "Active",
+        password: "",
+        role: "user",
       });
 
-      fetchStudents();
+      fetchUsers();
     } catch (error) {
       console.log(error);
-      alert("Failed To Add User");
+      alert(
+        error.response?.data?.message ||
+          "Failed To Add User"
+      );
     }
   };
 
-  const deleteStudent = async (id) => {
+  const deleteUser = async (id) => {
     try {
-      await API.delete(`/students/${id}`);
-      fetchStudents();
+      await API.delete(`/users/${id}`);
+      fetchUsers();
     } catch (error) {
       console.log(error);
       alert("Failed To Delete User");
@@ -83,17 +82,17 @@ function ManageUsers() {
           <div className="col-12 col-md-6">
             <div className="card shadow border-0 p-4 text-center h-100">
               <h5>Total Users</h5>
-              <h2>{students.length}</h2>
+              <h2>{users.length}</h2>
             </div>
           </div>
 
           <div className="col-12 col-md-6">
             <div className="card shadow border-0 p-4 text-center h-100">
-              <h5>Active Users</h5>
+              <h5>Normal Users</h5>
               <h2>
                 {
-                  students.filter(
-                    (user) => user.status === "Active"
+                  users.filter(
+                    (user) => user.role === "user"
                   ).length
                 }
               </h2>
@@ -129,38 +128,38 @@ function ManageUsers() {
 
             <div className="col-12 col-md-3">
               <input
-                type="text"
-                name="course"
+                type="password"
+                name="password"
                 className="form-control"
-                placeholder="Course"
-                value={formData.course}
+                placeholder="Password default 123456"
+                value={formData.password}
                 onChange={handleChange}
               />
             </div>
 
             <div className="col-12 col-md-3">
               <select
-                name="status"
+                name="role"
                 className="form-control"
-                value={formData.status}
+                value={formData.role}
                 onChange={handleChange}
               >
-                <option value="Active">Active</option>
-                <option value="Inactive">Inactive</option>
+                <option value="user">User</option>
+                <option value="admin">Admin</option>
               </select>
             </div>
           </div>
 
           <button
             className="btn btn-primary w-100 mt-3"
-            onClick={addStudent}
+            onClick={addUser}
           >
             Add User
           </button>
         </div>
 
         <div className="card shadow border-0 p-3 p-md-4">
-          <h4 className="mb-3">User List</h4>
+          <h4 className="mb-3">Registered User List</h4>
 
           <div className="table-responsive">
             <table className="table table-bordered table-hover align-middle">
@@ -168,35 +167,33 @@ function ManageUsers() {
                 <tr>
                   <th>Name</th>
                   <th>Email</th>
-                  <th>Course</th>
-                  <th>Status</th>
+                  <th>Role</th>
                   <th>Action</th>
                 </tr>
               </thead>
 
               <tbody>
-                {students.length > 0 ? (
-                  students.map((student) => (
-                    <tr key={student._id}>
-                      <td>{student.name}</td>
-                      <td>{student.email}</td>
-                      <td>{student.course}</td>
+                {users.length > 0 ? (
+                  users.map((user) => (
+                    <tr key={user._id}>
+                      <td>{user.name}</td>
+                      <td>{user.email}</td>
                       <td>
                         <span
                           className={`badge ${
-                            student.status === "Active"
-                              ? "bg-success"
-                              : "bg-secondary"
+                            user.role === "admin"
+                              ? "bg-danger"
+                              : "bg-success"
                           }`}
                         >
-                          {student.status}
+                          {user.role}
                         </span>
                       </td>
                       <td>
                         <button
                           className="btn btn-danger btn-sm"
                           onClick={() =>
-                            deleteStudent(student._id)
+                            deleteUser(user._id)
                           }
                         >
                           Delete
@@ -206,7 +203,10 @@ function ManageUsers() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="5" className="text-center">
+                    <td
+                      colSpan="4"
+                      className="text-center"
+                    >
                       No Users Found
                     </td>
                   </tr>
