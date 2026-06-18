@@ -26,7 +26,13 @@ function Reports() {
   const fetchReports = async () => {
     try {
       const res = await API.get("/admin/reports");
-      setReports(res.data);
+
+      setReports({
+        users: res.data.users || 0,
+        courses: res.data.courses || 0,
+        assignments: res.data.assignments || 0,
+        quizzes: res.data.quizzes || 0,
+      });
     } catch (error) {
       console.log(error);
     }
