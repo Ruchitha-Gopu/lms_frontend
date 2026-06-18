@@ -13,7 +13,7 @@ import {
 
 function Reports() {
   const [reports, setReports] = useState({
-    students: 0,
+    users: 0,
     courses: 0,
     assignments: 0,
     quizzes: 0,
@@ -33,7 +33,7 @@ function Reports() {
   };
 
   const chartData = [
-    { name: "Students", value: reports.students },
+    { name: "Users", value: reports.users },
     { name: "Courses", value: reports.courses },
     { name: "Assignments", value: reports.assignments },
     { name: "Quizzes", value: reports.quizzes },
@@ -51,8 +51,8 @@ function Reports() {
         <div className="row g-4 mb-4">
           <div className="col-lg-3 col-md-6">
             <div className="card shadow p-4 text-center border-0">
-              <h5>Total Students</h5>
-              <h2>{reports.students}</h2>
+              <h5>Total Users</h5>
+              <h2>{reports.users}</h2>
             </div>
           </div>
 
