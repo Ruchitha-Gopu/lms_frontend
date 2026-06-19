@@ -1,18 +1,18 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import API from "../api";
 
-// GET Progress Data
+// API call for getting progress data
 export const fetchProgress = createAsyncThunk(
   "progress/fetchProgress",
-  async () => {
-    const res = await axios.get(
-      "http://localhost:5000/api/progress"
-    );
 
-    return res.data;
+  async () => {
+    const response = await API.get("/api/progress");
+
+    return response.data;
   }
 );
 
+// Progress state
 const progressSlice = createSlice({
   name: "progress",
 
@@ -27,28 +27,23 @@ const progressSlice = createSlice({
   extraReducers: (builder) => {
     builder
 
-      .addCase(
-        fetchProgress.pending,
-        (state) => {
-          state.loading = true;
-        }
-      )
+      // API loading started
+      .addCase(fetchProgress.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
 
-      .addCase(
-        fetchProgress.fulfilled,
-        (state, action) => {
-          state.loading = false;
-          state.progress = action.payload;
-        }
-      )
+      // API success
+      .addCase(fetchProgress.fulfilled, (state, action) => {
+        state.loading = false;
+        state.progress = action.payload;
+      })
 
-      .addCase(
-        fetchProgress.rejected,
-        (state, action) => {
-          state.loading = false;
-          state.error = action.error.message;
-        }
-      );
+      // API failed
+      .addCase(fetchProgress.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message;
+      });
   },
 });
 

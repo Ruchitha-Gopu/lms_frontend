@@ -1,47 +1,50 @@
-import {
-  createSlice,
-  createAsyncThunk
-} from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import API from "../api";
 
-import axios from "axios";
+// API call for getting quiz questions
+export const fetchQuiz = createAsyncThunk(
+  "quiz/fetchQuiz",
 
-export const fetchQuiz =
-  createAsyncThunk(
-    "quiz/fetchQuiz",
-    async () => {
-      const res = await axios.get(
-        "http://localhost:5000/api/quiz"
-      );
+  async () => {
+    const response = await API.get("/api/quiz");
 
-      return res.data;
-    }
-  );
+    return response.data;
+  }
+);
 
+// Quiz state
 const quizSlice = createSlice({
   name: "quiz",
 
   initialState: {
     questions: [],
-    loading: false
+    loading: false,
+    error: null,
   },
+
+  reducers: {},
 
   extraReducers: (builder) => {
     builder
-      .addCase(
-        fetchQuiz.pending,
-        (state) => {
-          state.loading = true;
-        }
-      )
-      .addCase(
-        fetchQuiz.fulfilled,
-        (state, action) => {
-          state.loading = false;
-          state.questions =
-            action.payload;
-        }
-      );
-  }
+
+      // API loading started
+      .addCase(fetchQuiz.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+
+      // API success
+      .addCase(fetchQuiz.fulfilled, (state, action) => {
+        state.loading = false;
+        state.questions = action.payload;
+      })
+
+      // API failed
+      .addCase(fetchQuiz.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message;
+      });
+  },
 });
 
 export default quizSlice.reducer;

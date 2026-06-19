@@ -1,22 +1,18 @@
-import {
-  createSlice,
-  createAsyncThunk,
-} from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import API from "../api";
 
-import axios from "axios";
+// API call for getting certificates
+export const fetchCertificates = createAsyncThunk(
+  "certificates/fetchCertificates",
 
-export const fetchCertificates =
-  createAsyncThunk(
-    "certificates/fetchCertificates",
-    async () => {
-      const res = await axios.get(
-        "http://localhost:5000/api/certificates"
-      );
+  async () => {
+    const response = await API.get("/api/certificates");
 
-      return res.data;
-    }
-  );
+    return response.data;
+  }
+);
 
+// Certificate state
 const certificateSlice = createSlice({
   name: "certificates",
 
@@ -31,32 +27,23 @@ const certificateSlice = createSlice({
   extraReducers: (builder) => {
     builder
 
-      .addCase(
-        fetchCertificates.pending,
-        (state) => {
-          state.loading = true;
-        }
-      )
+      // API loading started
+      .addCase(fetchCertificates.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
 
-      .addCase(
-        fetchCertificates.fulfilled,
-        (state, action) => {
-          state.loading = false;
+      // API success
+      .addCase(fetchCertificates.fulfilled, (state, action) => {
+        state.loading = false;
+        state.certificates = action.payload;
+      })
 
-          state.certificates =
-            action.payload;
-        }
-      )
-
-      .addCase(
-        fetchCertificates.rejected,
-        (state, action) => {
-          state.loading = false;
-
-          state.error =
-            action.error.message;
-        }
-      );
+      // API failed
+      .addCase(fetchCertificates.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message;
+      });
   },
 });
 

@@ -3,17 +3,19 @@ import {
   createAsyncThunk,
 } from "@reduxjs/toolkit";
 
-import axios from "axios";
+import API from "../api";
 
+// API call for getting assignments
 export const fetchAssignments =
   createAsyncThunk(
     "assignments/fetchAssignments",
+
     async () => {
-      const res = await axios.get(
-        "http://localhost:5000/api/assignments"
+      const response = await API.get(
+        "/api/assignments"
       );
 
-      return res.data;
+      return response.data;
     }
   );
 
@@ -23,21 +25,39 @@ const assignmentSlice = createSlice({
   initialState: {
     data: [],
     loading: false,
+    error: null,
   },
+
+  reducers: {},
 
   extraReducers: (builder) => {
     builder
+
+      // API loading started
       .addCase(
         fetchAssignments.pending,
         (state) => {
           state.loading = true;
+          state.error = null;
         }
       )
+
+      // API success
       .addCase(
         fetchAssignments.fulfilled,
         (state, action) => {
           state.loading = false;
           state.data = action.payload;
+        }
+      )
+
+      // API failed
+      .addCase(
+        fetchAssignments.rejected,
+        (state, action) => {
+          state.loading = false;
+          state.error =
+            action.error.message;
         }
       );
   },
