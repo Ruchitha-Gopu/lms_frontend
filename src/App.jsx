@@ -13,7 +13,6 @@ import Assignments from "./pages/Assignments";
 import Quiz from "./pages/Quiz";
 import Certificates from "./pages/Certificates";
 import Settings from "./pages/Settings";
-
 import ManageUsers from "./pages/ManageUsers";
 import ManageCourses from "./pages/ManageCourses";
 import ManageAssignments from "./pages/ManageAssignments";
